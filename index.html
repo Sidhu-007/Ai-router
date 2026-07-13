@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent AI Router Gateway</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Dashboard -->
+        <aside class="sidebar collapsed">
+            <div class="brand">
+                <div class="logo-icon"></div>
+                <h2>Router Workspace</h2>
+            </div>
+            
+            <button id="new-chat-btn" class="new-chat-btn">
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                New Chat
+            </button>
+            
+            <div class="sessions-section">
+                <h3>Recent Chats</h3>
+                <ul id="sessions-list" class="sessions-list">
+                    <!-- Loaded dynamically -->
+                </ul>
+            </div>
+            
+            <div class="stats-section">
+                <h3>Session Metrics</h3>
+                
+                <div class="stat-card">
+                    <span class="stat-label">Total Requests</span>
+                    <span id="stat-requests" class="stat-value">0</span>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-label">Success Rate</span>
+                    <span id="stat-success" class="stat-value">0%</span>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-label">Accumulated Cost</span>
+                    <span id="stat-cost" class="stat-value">$0.00</span>
+                </div>
+            </div>
+            
+            <div class="model-catalog">
+                <h3>Model Catalog</h3>
+                <ul id="catalog-list" class="catalog-list">
+                    <!-- Loaded dynamically -->
+                </ul>
+            </div>
+
+            <!-- User Auth Profile Section -->
+            <div id="user-profile-section" class="user-profile-section">
+                <!-- Loaded dynamically -->
+            </div>
+        </aside>
+        
+        <!-- Main Chat Area -->
+        <main class="chat-area">
+            <header class="chat-header">
+                <button id="toggle-sidebar-btn" class="toggle-sidebar-btn" title="Toggle sidebar">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H9V5h10v14z"/>
+                    </svg>
+                </button>
+                <div class="header-info">
+                    <h1>Conversational AI Gateway</h1>
+                    <p>powered by Fireworks</p>
+                </div>
+                <!-- Auth Header Buttons -->
+                <div id="header-auth-buttons" class="header-auth-buttons" style="display: none;">
+                    <button id="header-login-btn" class="header-btn login-btn">Log in</button>
+                    <button id="header-signup-btn" class="header-btn signup-btn">Sign up</button>
+                </div>
+            </header>
+            
+            <div id="chat-feed" class="chat-feed">
+                <!-- Welcome Greeting -->
+                <div class="message assistant-message">
+                    <div class="bubble">
+                        Hi there! 👋 How can I help you today?
+                    </div>
+                </div>
+            </div>
+            
+            <footer class="chat-footer">
+                <form id="chat-form" class="chat-form">
+                    <!-- Hidden file input styled to be safely clickable on all browsers -->
+                    <input type="file" id="file-input" style="position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none;" />
+                    <button type="button" id="attach-btn" class="attach-btn" title="Attach file">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="currentColor" d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-3.31 2.69-6 6-6s6 2.69 6 6v12.5c0 4.42-3.58 8-8 8s-8-3.58-8-8V6h2v11.5c0 3.31 2.69 6 6 6s6-2.69 6-6V5c0-2.21-1.79-4-4-4s-4 1.79-4 4v12.5c0 1.1.9 2 2 2s2-.9 2-2V6h2z"/>
+                        </svg>
+                    </button>
+                    <input type="text" id="prompt-input" autocomplete="off" placeholder="Type a prompt or attach a file to route..." required />
+                    <button type="submit" class="send-btn">
+                        <svg viewBox="0 0 24 24" width="24" height="24">
+                            <path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </form>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="auth-modal" style="display: none;">
+        <div class="auth-modal-content">
+            <button id="close-auth-btn" class="close-auth-btn">&times;</button>
+            <h2 id="auth-title">Sign In</h2>
+            <form id="auth-form" class="auth-form-fields">
+                <input type="email" id="auth-email" placeholder="Email Address" required />
+                <input type="password" id="auth-password" placeholder="Password" required />
+                <button type="submit" id="auth-submit-btn" class="auth-submit-btn">Sign In</button>
+            </form>
+            <p class="auth-toggle-text">
+                Don't have an account? <span id="auth-toggle-link">Sign Up</span>
+            </p>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
