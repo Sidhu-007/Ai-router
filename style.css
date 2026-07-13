@@ -23,6 +23,7 @@ body {
     color: var(--text-primary);
     font-family: 'Plus Jakarta Sans', sans-serif;
     height: 100vh;
+    height: 100dvh; /* dvh accounts for mobile browser chrome */
     overflow: hidden;
     letter-spacing: -0.1px;
 }
@@ -31,6 +32,7 @@ body {
 .app-container {
     display: flex;
     height: 100vh;
+    height: 100dvh;
     width: 100vw;
     background-color: var(--bg-dark);
 }
@@ -362,6 +364,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    height: 100dvh;
     background-color: var(--bg-dark);
 }
 
@@ -640,6 +643,7 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     background-color: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(4px);
     display: flex;
@@ -779,6 +783,15 @@ body {
     .chat-area {
         width: 100%;
         max-width: 100vw;
+        /* Ensure the column fills dynamic viewport correctly */
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chat-feed {
+        flex: 1;
+        min-height: 0; /* allow flexbox shrink */
     }
     
     .message {
@@ -792,10 +805,15 @@ body {
     
     .chat-header {
         padding: 12px 16px;
+        flex-shrink: 0;
     }
     
     .chat-footer {
         padding: 12px 16px 16px 16px;
+        /* Push above mobile browser nav bar on supported devices */
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+        flex-shrink: 0;
+        background-color: var(--bg-dark);
     }
     
     .chat-form {
