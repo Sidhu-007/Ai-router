@@ -827,32 +827,38 @@ body {
     }
 
     /* Lock the app viewport to prevent any page horizontal scrolling */
-    body, .app-container, .chat-area, .chat-feed, .message, .bubble {
+    body, .app-container, .chat-area, .chat-feed {
         max-width: 100% !important;
         overflow-x: hidden !important;
     }
 
-    /* Force tables to fit 100% width with no horizontal scroll */
+    .message, .bubble {
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    /* Prevent tables from breaking layout, make table scrollable internally */
     .bubble table {
-        display: table !important;
+        display: block !important;
         width: 100% !important;
-        table-layout: auto !important;
-        overflow-x: visible !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
         margin: 0.75rem 0 !important;
         font-size: 0.75rem !important;
         border-radius: 6px !important;
+        -webkit-overflow-scrolling: touch;
     }
 
     .bubble th, .bubble td {
-        padding: 6px 8px !important;
-        min-width: 0 !important;
+        padding: 6px 10px !important;
+        min-width: 110px !important; /* Ensure enough horizontal breathing room */
         word-break: normal !important;
         word-wrap: normal !important;
     }
 
     .bubble th:first-child, .bubble td:first-child {
         min-width: 85px !important;
-        white-space: normal !important;
+        white-space: nowrap !important; /* Categories stay horizontal */
         font-weight: 700 !important;
     }
 }
