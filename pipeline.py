@@ -38,6 +38,7 @@ FIREWORKS_MODEL_MAPPING = {
 class Pipeline:
     def __init__(self):
         self.learning_component = LearningComponent()
+        self.session = requests.Session()
 
     def process_request(self, request: Request):
         logger.info(f"\n--- Processing Request: '{request.prompt[:50]}...' ---")
@@ -119,6 +120,112 @@ class Pipeline:
         
         return final_model, success, final_response, domain, difficulty, context_req, total_cost, execution_time
 
+    def stream_request(self, request: Request):
+        features = FeatureExtractor.extract(request)
+        domain, domain_conf = DomainPredictor.predict(request)
+        difficulty = DifficultyPredictor.predict(domain, request)
+        context_req = ContextEstimator.estimate(request)
+        
+        selected_model_name = RouterEngine.select_model(request, domain, difficulty, context_req)
+        
+        yield f"data: {json.dumps({'type': 'meta', 'model': selected_model_name, 'domain': domain, 'difficulty': difficulty, 'context': context_req})}\n\n"
+        
+        if not FIREWORKS_API_KEY:
+            # Mock streaming fallback
+            time.sleep(0.5)
+            mock_text = f"[Mock response from {selected_model_name}] Detailed streaming answer to prompt: '{request.prompt[:40]}...'"
+            words = mock_text.split()
+            for word in words:
+                time.sleep(0.08)
+                yield f"data: {json.dumps({'type': 'token', 'text': word + ' '})}\n\n"
+            
+            yield f"data: {json.dumps({'type': 'stats', 'cost': 0.0001, 'latency': 1.0, 'success': True})}\n\n"
+            return
+            
+        model_id = FIREWORKS_MODEL_MAPPING.get(selected_model_name, "accounts/fireworks/models/gpt-oss-120b")
+        url = "https://api.fireworks.ai/inference/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {FIREWORKS_API_KEY}",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0"
+        }
+        
+        messages = []
+        if request.context:
+            try:
+                messages = json.loads(request.context)
+            except:
+                pass
+        if not isinstance(messages, list):
+            messages = []
+        messages.append({"role": "user", "content": request.prompt})
+        
+        body = {
+            "model": model_id,
+            "messages": messages,
+            "max_tokens": 4096,
+            "temperature": 0.7,
+            "stream": True
+        }
+        
+        start_time = time.time()
+        full_response = ""
+        prompt_tokens = len(request.prompt.split())
+        completion_tokens = 0
+        
+        try:
+            res = self.session.post(url, headers=headers, json=body, stream=True, timeout=45)
+            if res.status_code == 200:
+                for line in res.iter_lines():
+                    if not line:
+                        continue
+                    line_str = line.decode("utf-8").strip()
+                    if line_str.startswith("data: "):
+                        data_payload = line_str[6:]
+                        if data_payload == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(data_payload)
+                            delta = chunk["choices"][0].get("delta", {})
+                            if "content" in delta:
+                                token = delta["content"]
+                                full_response += token
+                                completion_tokens += 1
+                                yield f"data: {json.dumps({'type': 'token', 'text': token})}\n\n"
+                        except Exception:
+                            pass
+            else:
+                error_msg = f"Fireworks API Error: {res.text}"
+                yield f"data: {json.dumps({'type': 'error', 'text': error_msg})}\n\n"
+                full_response = error_msg
+        except Exception as e:
+            error_msg = f"Inference Exception: {str(e)}"
+            yield f"data: {json.dumps({'type': 'error', 'text': error_msg})}\n\n"
+            full_response = error_msg
+            
+        latency = time.time() - start_time
+        
+        model_def = MODEL_CATALOG[selected_model_name]
+        input_rate = model_def.base_cost * 0.25
+        output_rate = model_def.base_cost
+        cost = (prompt_tokens * input_rate + completion_tokens * output_rate) / 1_000_000.0
+        
+        evaluation = self._evaluate_response(selected_model_name, request, full_response)
+        success = evaluation.confidence >= 0.85
+        
+        history_entry = RoutingHistoryEntry(
+            prompt_category=domain,
+            chosen_model=selected_model_name,
+            latency_estimate=int(latency * 10),
+            cost_estimate=cost,
+            confidence=evaluation.confidence,
+            success=success,
+            escalation_count=0
+        )
+        self.learning_component.record(history_entry)
+        
+        yield f"data: {json.dumps({'type': 'stats', 'cost': cost, 'latency': latency, 'success': success})}\n\n"
+
     def _execute_model(self, model_name: str, request: Request) -> tuple[str, float, int, int]:
         prompt = request.prompt
         if FIREWORKS_API_KEY:
@@ -145,13 +252,13 @@ class Pipeline:
             body = {
                 "model": model_id,
                 "messages": messages,
-                "max_tokens": 1024,
+                "max_tokens": 4096,
                 "temperature": 0.7
             }
             
             start_time = time.time()
             try:
-                res = requests.post(url, headers=headers, json=body, timeout=45)
+                res = self.session.post(url, headers=headers, json=body, timeout=45)
                 if res.status_code == 200:
                     res_data = res.json()
                     content = res_data["choices"][0]["message"]["content"]

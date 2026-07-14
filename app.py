@@ -1,7 +1,8 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse
 from pydantic import BaseModel
 from typing import List
+from io import BytesIO
 import os
 import json
 
@@ -81,23 +82,71 @@ async def chat(payload: ChatRequest):
             prompt=payload.prompt,
             context=json.dumps(history_list)
         )
-        final_model, success, response, domain, difficulty, context, cost, latency = pipeline.process_request(req)
-
-        return {
-            "prompt": payload.prompt,
-            "domain": domain,
-            "difficulty": difficulty,
-            "context": context,
-            "model": final_model,
-            "success": success,
-            "response": response,
-            "cost": cost,
-            "latency": latency
-        }
+        return StreamingResponse(
+            pipeline.stream_request(req),
+            media_type="text/event-stream"
+        )
     except Exception as e:
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/parse-file")
+async def parse_file(file: UploadFile = File(...)):
+    filename = file.filename
+    ext = os.path.splitext(filename)[1].lower()
+    content_text = ""
+    
+    try:
+        file_bytes = await file.read()
+        file_stream = BytesIO(file_bytes)
+        
+        if ext == ".pptx":
+            import pptx
+            prs = pptx.Presentation(file_stream)
+            slides_text = []
+            for i, slide in enumerate(prs.slides):
+                slide_parts = [f"--- Slide {i+1} ---"]
+                for shape in slide.shapes:
+                    if hasattr(shape, "text") and shape.text.strip():
+                        slide_parts.append(shape.text.strip())
+                slides_text.append("\n".join(slide_parts))
+            content_text = "\n\n".join(slides_text)
+            
+        elif ext == ".pdf":
+            import pypdf
+            reader = pypdf.PdfReader(file_stream)
+            pages_text = []
+            for i, page in enumerate(reader.pages):
+                text = page.extract_text()
+                pages_text.append(f"--- Page {i+1} ---\n{text if text else ''}")
+            content_text = "\n\n".join(pages_text)
+            
+        elif ext == ".docx":
+            import docx
+            doc = docx.Document(file_stream)
+            paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+            content_text = "\n".join(paragraphs)
+            
+        else:
+            # Fallback to UTF-8 decoding for general text/code files
+            try:
+                content_text = file_bytes.decode("utf-8")
+            except UnicodeDecodeError:
+                try:
+                    content_text = file_bytes.decode("latin-1")
+                except Exception:
+                    raise HTTPException(status_code=400, detail="Unable to decode file content as text.")
+                    
+        return {
+            "filename": filename,
+            "content": content_text
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to parse file: {str(e)}")
 
 
 # --- Firebase Auth & History Sync Endpoints ---

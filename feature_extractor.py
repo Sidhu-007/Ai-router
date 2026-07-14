@@ -51,6 +51,10 @@ class FeatureExtractor:
         if file_match:
             features.number_of_files = int(file_match.group(1))
             
+        attachment_count = len(re.findall(r'\[file attachment:', prompt))
+        if attachment_count > 0:
+            features.number_of_files = attachment_count
+            
         # Complexity estimation (naive)
         if "expert" in prompt or "advanced" in prompt or "olympiad" in prompt or "architecture" in prompt or "distributed" in prompt:
             features.estimated_complexity = "high"
