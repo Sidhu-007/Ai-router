@@ -820,6 +820,36 @@ body {
         padding: 6px 12px;
         gap: 8px;
     }
+
+    /* Lock the app viewport to prevent any page horizontal scrolling */
+    body, .app-container, .chat-area, .chat-feed, .message, .bubble {
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Force tables to fit 100% width with no horizontal scroll */
+    .bubble table {
+        display: table !important;
+        width: 100% !important;
+        table-layout: auto !important;
+        overflow-x: visible !important;
+        margin: 0.75rem 0 !important;
+        font-size: 0.75rem !important;
+        border-radius: 6px !important;
+    }
+
+    .bubble th, .bubble td {
+        padding: 6px 8px !important;
+        min-width: 0 !important;
+        word-break: normal !important;
+        word-wrap: normal !important;
+    }
+
+    .bubble th:first-child, .bubble td:first-child {
+        min-width: 85px !important;
+        white-space: normal !important;
+        font-weight: 700 !important;
+    }
 }
 
 /* --- Markdown & Math Rendering Styles --- */
