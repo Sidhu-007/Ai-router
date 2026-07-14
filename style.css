@@ -995,6 +995,7 @@ body {
     padding: 10px 14px;
     text-align: left;
     border: 1px solid rgba(255, 255, 255, 0.05);
+    min-width: 120px; /* Prevent text squishing in columns */
 }
 
 .bubble th {
@@ -1002,6 +1003,12 @@ body {
     font-weight: 600;
     color: var(--text-primary);
     white-space: nowrap;
+}
+
+.bubble th:first-child, .bubble td:first-child {
+    min-width: 90px;
+    white-space: nowrap; /* Prevent category names from wrapping */
+    font-weight: 600;
 }
 
 .bubble tr:nth-child(even) {
