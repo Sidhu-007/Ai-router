@@ -3,3 +3,7 @@ uvicorn
 firebase-admin
 python-dotenv
 requests
+python-multipart
+pypdf
+python-docx
+python-pptx
