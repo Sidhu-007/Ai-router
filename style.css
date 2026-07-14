@@ -974,3 +974,40 @@ body {
 .remove-chip-btn:hover {
     color: #ef4444;
 }
+
+/* Premium Responsive Table Styling */
+.bubble table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25rem 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    background-color: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.bubble th, .bubble td {
+    padding: 10px 14px;
+    text-align: left;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bubble th {
+    background-color: rgba(255, 255, 255, 0.03);
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.bubble tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.bubble tr:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
