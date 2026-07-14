@@ -130,7 +130,8 @@ class Pipeline:
         
         yield f"data: {json.dumps({'type': 'meta', 'model': selected_model_name, 'domain': domain, 'difficulty': difficulty, 'context': context_req})}\n\n"
         
-        if not FIREWORKS_API_KEY:
+        is_placeholder = not FIREWORKS_API_KEY or any(p in FIREWORKS_API_KEY.lower() for p in ["placeholder", "your_key", "your_api_key"])
+        if is_placeholder:
             # Mock streaming fallback
             time.sleep(0.5)
             mock_text = f"[Mock response from {selected_model_name}] Detailed streaming answer to prompt: '{request.prompt[:40]}...'"
@@ -228,7 +229,8 @@ class Pipeline:
 
     def _execute_model(self, model_name: str, request: Request) -> tuple[str, float, int, int]:
         prompt = request.prompt
-        if FIREWORKS_API_KEY:
+        is_placeholder = not FIREWORKS_API_KEY or any(p in FIREWORKS_API_KEY.lower() for p in ["placeholder", "your_key", "your_api_key"])
+        if not is_placeholder:
             model_id = FIREWORKS_MODEL_MAPPING.get(model_name, "accounts/fireworks/models/gpt-oss-120b")
             url = "https://api.fireworks.ai/inference/v1/chat/completions"
             headers = {
